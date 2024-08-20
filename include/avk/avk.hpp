@@ -836,6 +836,32 @@ namespace avk
 #pragma region image
 		image create_image_from_template(const image_t& aTemplate, std::function<void(image_t&)> aAlterConfigBeforeCreation = {});
 
+		/** Creates a new image allocated in a custom memory pool
+		 *	@param	aWidth						The width of the image to be created
+		 *	@param	aHeight						The height of the image to be created
+		 *	@param	aFormatAndSamples			The image format and the number of samples of the image to be created
+		 *	@param	aMemoryUsage				Where the memory of the image shall be allocated (GPU or CPU) and how it is going to be used.
+		 *	@param	aImageUsage					How this image is intended to being used.
+		 *	@param	aNumLayers					How many layers the image to be created shall contain.
+		 *	@param	aAlterConfigBeforeCreation	A context-specific function which allows to modify the `vk::ImageCreateInfo` just before the image will be created. Use `.create_info()` to access the configuration structure!
+		 *	@param	aVmaPool					The custom memory pool that is used for allocation
+		 *	@return	Returns a newly created image.
+		 */
+		image create_image_with_custom_memory_pool(uint32_t aWidth, uint32_t aHeight, std::tuple<vk::Format, vk::SampleCountFlagBits> aFormatAndSamples, int aNumLayers, memory_usage aMemoryUsage, image_usage aImageUsage, std::function<void(image_t&)> aAlterConfigBeforeCreation, VmaPool aVmaPool);
+
+		/** Creates a new image allocated in a custom memory pool
+		 *	@param	aWidth						The width of the image to be created
+		 *	@param	aHeight						The height of the image to be created
+		 *	@param	aFormatAndSamples			The image format and the number of samples of the image to be created
+		 *	@param	aMemoryUsage				Where the memory of the image shall be allocated (GPU or CPU) and how it is going to be used.
+		 *	@param	aImageUsage					How this image is intended to being used.
+		 *	@param	aNumLayers					How many layers the image to be created shall contain.
+		 *	@param	aAlterConfigBeforeCreation	A context-specific function which allows to modify the `vk::ImageCreateInfo` just before the image will be created. Use `.create_info()` to access the configuration structure!
+		 *	@param	aVmaPool					The custom memory pool that is used for allocation
+		 *	@return	Returns a newly created image.
+		 */
+		image create_image_with_custom_memory_pool(uint32_t aWidth, uint32_t aHeight, vk::Format aFormat, int aNumLayers, memory_usage aMemoryUsage, image_usage aImageUsage, std::function<void(image_t&)> aAlterConfigBeforeCreation, VmaPool aVmaPool);
+
 		/** Creates a new image
 		 *	@param	aWidth						The width of the image to be created
 		 *	@param	aHeight						The height of the image to be created

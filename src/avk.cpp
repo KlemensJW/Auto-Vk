@@ -5003,6 +5003,100 @@ namespace avk
 
 		return result;
 	}
+	
+	image root::create_image_with_custom_memory_pool(uint32_t aWidth, uint32_t aHeight, std::tuple<vk::Format, vk::SampleCountFlagBits> aFormatAndSamples, int aNumLayers, memory_usage aMemoryUsage, image_usage aImageUsage, std::function<void(image_t&)> aAlterConfigBeforeCreation, VmaPool aVmaPool)
+	{
+		// Determine image usage flags, image layout, and memory usage flags
+		auto [imageUsage, targetLayout, imageTiling, imageCreateFlags] = determine_usage_layout_tiling_flags_based_on_image_usage(aImageUsage);
+
+		vk::MemoryPropertyFlags memoryPropFlags{};
+		switch (aMemoryUsage) {
+		case avk::memory_usage::host_visible:
+			memoryPropFlags = vk::MemoryPropertyFlagBits::eHostVisible;
+			break;
+		case avk::memory_usage::host_coherent:
+			memoryPropFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+			break;
+		case avk::memory_usage::host_cached:
+			memoryPropFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCached;
+			break;
+		case avk::memory_usage::device:
+			memoryPropFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
+			imageUsage |= vk::ImageUsageFlagBits::eTransferDst;
+			break;
+		case avk::memory_usage::device_readback:
+			memoryPropFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
+			imageUsage |= vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc;
+			break;
+		case avk::memory_usage::device_protected:
+			memoryPropFlags = vk::MemoryPropertyFlagBits::eDeviceLocal | vk::MemoryPropertyFlagBits::eProtected;
+			imageUsage |= vk::ImageUsageFlagBits::eTransferDst;
+			break;
+		}
+
+		// How many MIP-map levels are we going to use?
+		auto mipLevels = avk::has_flag(aImageUsage, avk::image_usage::mip_mapped)
+			? static_cast<uint32_t>(1 + std::floor(std::log2(std::max(aWidth, aHeight))))
+			: 1u;
+
+		const auto format = std::get<vk::Format>(aFormatAndSamples);
+		const auto samples = std::get<vk::SampleCountFlagBits>(aFormatAndSamples);
+
+		if (avk::has_flag(imageUsage, vk::ImageUsageFlagBits::eDepthStencilAttachment) && vk::ImageTiling::eOptimal == imageTiling) {
+			auto formatProps = physical_device().getFormatProperties(format);
+			if (!has_flag(formatProps.optimalTilingFeatures, vk::FormatFeatureFlagBits::eDepthStencilAttachment)) {
+				imageTiling = vk::ImageTiling::eLinear;
+			}
+		}
+
+		vk::ImageAspectFlags aspectFlags = {};
+		if (is_depth_format(format)) {
+			aspectFlags |= vk::ImageAspectFlagBits::eDepth;
+		}
+		if (has_stencil_component(format)) {
+			aspectFlags |= vk::ImageAspectFlagBits::eStencil;
+		}
+		if (!aspectFlags) {
+			aspectFlags = vk::ImageAspectFlagBits::eColor;
+			// TODO: maybe support further aspect flags?!
+		}
+
+		image_t result;
+		result.mRoot = this;
+		vk::ExternalMemoryImageCreateInfo externalMemoryImageCreateInfo = vk::ExternalMemoryImageCreateInfo()
+			.setHandleTypes(vk::ExternalMemoryHandleTypeFlagBits::eOpaqueWin32)
+			.setPNext(nullptr);
+		result.mCreateInfo = vk::ImageCreateInfo()
+			.setImageType(vk::ImageType::e2D) // TODO: Support 3D textures
+			.setExtent(vk::Extent3D(static_cast<uint32_t>(aWidth), static_cast<uint32_t>(aHeight), 1u))
+			.setMipLevels(mipLevels)
+			.setArrayLayers(aNumLayers)
+			.setFormat(format)
+			.setTiling(imageTiling)
+			.setInitialLayout(vk::ImageLayout::eUndefined)
+			.setUsage(imageUsage)
+			.setSharingMode(vk::SharingMode::eExclusive) // TODO: Not sure yet how to handle this one, Exclusive should be the default, though.
+			.setSamples(samples)
+			.setFlags(imageCreateFlags)
+			.setPNext(&externalMemoryImageCreateInfo);
+
+		result.mImageUsage = aImageUsage;
+		result.mAspectFlags = aspectFlags;
+
+		// Maybe alter the config?!
+		if (aAlterConfigBeforeCreation) {
+			aAlterConfigBeforeCreation(result);
+		}
+
+		result.mImage = AVK_MEM_IMAGE_HANDLE{ memory_allocator(), memoryPropFlags, result.mCreateInfo, aVmaPool};
+
+		return result;
+	}
+
+	image root::create_image_with_custom_memory_pool(uint32_t aWidth, uint32_t aHeight, vk::Format aFormat, int aNumLayers, memory_usage aMemoryUsage, image_usage aImageUsage, std::function<void(image_t&)> aAlterConfigBeforeCreation, VmaPool aVmaPool)
+	{
+		return create_image_with_custom_memory_pool(aWidth, aHeight, std::make_tuple(aFormat, vk::SampleCountFlagBits::e1), aNumLayers, aMemoryUsage, aImageUsage, std::move(aAlterConfigBeforeCreation), aVmaPool);
+	}
 
 	image root::create_image(uint32_t aWidth, uint32_t aHeight, std::tuple<vk::Format, vk::SampleCountFlagBits> aFormatAndSamples, int aNumLayers, memory_usage aMemoryUsage, image_usage aImageUsage, std::function<void(image_t&)> aAlterConfigBeforeCreation)
 	{
@@ -5083,7 +5177,7 @@ namespace avk
 			aAlterConfigBeforeCreation(result);
 		}
 
-		result.mImage = AVK_MEM_IMAGE_HANDLE{ memory_allocator(), memoryPropFlags, result.mCreateInfo };
+		result.mImage = AVK_MEM_IMAGE_HANDLE{ memory_allocator(), memoryPropFlags, result.mCreateInfo};
 
 		return result;
 	}

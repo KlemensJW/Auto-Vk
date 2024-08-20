@@ -28,6 +28,12 @@ namespace avk
 		 */
 		template <typename C>
 		vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const C& aResourceCreateInfo);
+
+		/**	Create VmaAllocator, VmaAllocationCreateInfo, and VmaAllocation internally. Uses a custom memory pool
+		 *	This is only implemented for certain types via template specialization: vk::Buffer, vk::Image
+		 */
+		template <typename C>
+		vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const C& aResourceCreateInfo, VmaPool aPool);
 		
 		/** Move-construct a vma_handle */
 		vma_handle(vma_handle&& aOther) noexcept : mAllocator{nullptr}, mCreateInfo{}, mAllocation{nullptr}, mAllocationInfo{}, mResource{nullptr}
@@ -152,6 +158,13 @@ namespace avk
 		throw avk::runtime_error(std::string("VMA allocation not implemented for type ") + typeid(T).name());
 	}
 
+	template<typename T>
+	template<typename C>
+	inline vma_handle<T>::vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const C& aResourceCreateInfo, VmaPool aPool)
+	{
+		throw avk::runtime_error(std::string("VMA allocation not implemented for type ") + typeid(T).name());
+	}
+
 	// Constructor's template specialization for vk::Buffer
 	template <>
 	template <>
@@ -161,6 +174,23 @@ namespace avk
 	{
 		mCreateInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(aMemPropFlags);
 		mCreateInfo.usage = VMA_MEMORY_USAGE_UNKNOWN;
+
+		VkBuffer buffer;
+		auto result = vmaCreateBuffer(aAllocator, &static_cast<const VkBufferCreateInfo&>(aResourceCreateInfo), &mCreateInfo, &buffer, &mAllocation, &mAllocationInfo);
+		assert(result >= 0);
+		mResource = buffer;
+	}
+
+	// Constructor's template specialization for vk::Buffer
+	template <>
+	template <>
+	inline vma_handle<vk::Buffer>::vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const vk::BufferCreateInfo& aResourceCreateInfo, VmaPool aPool)
+		: mAllocator{ aAllocator }
+		, mCreateInfo{}, mAllocation{ nullptr }, mAllocationInfo{}
+	{
+		mCreateInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(aMemPropFlags);
+		mCreateInfo.usage = VMA_MEMORY_USAGE_UNKNOWN;
+		mCreateInfo.pool = aPool;
 
 		VkBuffer buffer;
 		auto result = vmaCreateBuffer(aAllocator, &static_cast<const VkBufferCreateInfo&>(aResourceCreateInfo), &mCreateInfo, &buffer, &mAllocation, &mAllocationInfo);
@@ -183,7 +213,24 @@ namespace avk
 		assert(result >= 0);
 		mResource = image;
 	}
-	
+
+	// Constructor's template specialization for vk::Image
+	template <>
+	template <>
+	inline vma_handle<vk::Image>::vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const vk::ImageCreateInfo& aResourceCreateInfo, VmaPool aPool)
+		: mAllocator{ aAllocator }
+		, mCreateInfo{}, mAllocation{nullptr}, mAllocationInfo{}
+	{
+		mCreateInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(aMemPropFlags);
+		mCreateInfo.usage = VMA_MEMORY_USAGE_UNKNOWN;
+		mCreateInfo.pool = aPool;
+
+		VkImage image;
+		auto result = vmaCreateImage(aAllocator, &static_cast<const VkImageCreateInfo&>(aResourceCreateInfo), &mCreateInfo, &image, &mAllocation, &mAllocationInfo);
+		assert(result >= 0);
+		mResource = image;
+	}
+
 	// Fail if not used with either vk::Buffer or vk::Image
 	template <typename T>
 	vma_handle<T>::~vma_handle()
@@ -217,6 +264,25 @@ namespace avk
 			mAllocationInfo = {};
 			mResource = nullptr;
 		}
+	}
+
+	inline VmaPool alloc_custom_pool(VmaAllocator aAllocator, const VmaPoolCreateInfo* aPoolCreateInfo)
+	{
+		/*
+		VmaPoolCreateInfo pool_create_info = {};
+		pool_create_info.memoryTypeIndex = ;
+		pool_create_info.flags = ;
+		pool_create_info.blockSize = 0; // default
+		pool_create_info.minBlockCount = 0; // default
+		pool_create_info.maxBlockCount = 0;	// default
+		pool_create_info.priority = 0; // ignored unless VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT was used during creation of the VmaAllocator object
+		pool_create_info.minAllocationAlignment = 0; // default, though it is mentioned that i might need different alignment for interop with OpenGL so maybe also for interop with CUDA
+		pool_create_info.pMemoryAllocateNext = aAllocate_info;
+		*/
+
+		VmaPool pool;
+		vmaCreatePool(aAllocator, aPoolCreateInfo, &pool);
+		return pool;
 	}
 
 }
