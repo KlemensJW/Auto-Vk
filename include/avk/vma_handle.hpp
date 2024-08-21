@@ -98,6 +98,11 @@ namespace avk
 			return vk::MemoryPropertyFlags{ result };
 		}
 
+		std::tuple<vk::DeviceMemory, vk::DeviceSize> device_memory_and_offset() const
+		{
+			return {mAllocationInfo.deviceMemory, mAllocationInfo.offset};
+		}
+
 		/**	Map the memory in order to write data into, or read data from it.
 		 *	If data shall be read from it and the memory is not host coherent, an invalidate-instruction will be issued.
 		 *
