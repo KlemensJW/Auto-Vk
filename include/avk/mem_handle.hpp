@@ -79,6 +79,11 @@ namespace avk
 			return { mMemory, 0};
 		}
 
+		vk::DeviceSize memory_size() const
+		{
+			return mSize;
+		}
+
 		/**	Map the memory in order to write data into, or read data from it.
 		 *	If data shall be read from it and the memory is not host coherent, an invalidate-instruction will be issued.
 		 *
@@ -134,6 +139,7 @@ namespace avk
 		std::tuple<vk::PhysicalDevice, vk::Device> mAllocator;
 		vk::MemoryPropertyFlags mMemoryPropertyFlags;
 		vk::DeviceMemory mMemory;
+		vk::DeviceSize mSize;
 		T mResource;
 	};
 
@@ -185,6 +191,7 @@ namespace avk
 		
 		// Allocate the memory for the buffer:
 		mMemory = device.allocateMemory(allocInfo);
+		mSize = memRequirements.size();
 
 		// If memory allocation was successful, then we can now associate this memory with the buffer
 		device.bindBufferMemory(vkBuffer, mMemory, 0);
@@ -218,6 +225,7 @@ namespace avk
 			.setMemoryTypeIndex(std::get<uint32_t>(tpl)); // Get the selected memory type index from the result-tuple
 		
 		mMemory = device.allocateMemory(allocInfo);
+		mSize = memRequirements.size();
 
 		// bind them together:
 		device.bindImageMemory(vkImage, mMemory, 0);
@@ -238,6 +246,7 @@ namespace avk
 	{
 		if (static_cast<bool>(mResource)) {
 			auto& device = std::get<vk::Device>(mAllocator);
+			mSize = nullptr;
 			device.freeMemory(mMemory);
 			mMemory = nullptr;
 			device.destroyBuffer(mResource);
@@ -253,6 +262,7 @@ namespace avk
 	{
 		if (static_cast<bool>(mResource)) {
 			auto& device = std::get<vk::Device>(mAllocator);
+			mSize = nullptr;
 			device.freeMemory(mMemory);
 			mMemory = nullptr;
 			device.destroyImage(mResource);

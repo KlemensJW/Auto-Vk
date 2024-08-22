@@ -74,6 +74,15 @@ namespace avk
 			return std::get<AVK_MEM_IMAGE_HANDLE>(mImage).device_memory_and_offset();
 		}
 
+		vk::DeviceSize memory_size() const
+		{
+			assert(!std::holds_alternative<std::monostate>(mImage));
+			if (!std::holds_alternative<AVK_MEM_IMAGE_HANDLE>(mImage)) {
+				throw avk::runtime_error("Can not determine memory property flags of a non-allocated (but wrapped) image.");
+			}
+			return std::get<AVK_MEM_IMAGE_HANDLE>(mImage).memory_size();
+		}
+
 	private:
 		const root* mRoot;
 		// The image create info which contains all the parameters for image creation

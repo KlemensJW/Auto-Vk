@@ -103,6 +103,11 @@ namespace avk
 			return {mAllocationInfo.deviceMemory, mAllocationInfo.offset};
 		}
 
+		vk::DeviceSize memory_size() const
+		{
+			return mAllocationInfo.size;
+		}
+
 		/**	Map the memory in order to write data into, or read data from it.
 		 *	If data shall be read from it and the memory is not host coherent, an invalidate-instruction will be issued.
 		 *
