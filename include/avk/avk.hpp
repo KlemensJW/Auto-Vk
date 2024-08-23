@@ -1034,8 +1034,10 @@ namespace avk
 #pragma endregion
 
 #pragma region semaphore
+		static semaphore create_exportable_semaphore(vk::Device aDevice, const DISPATCH_LOADER_CORE_TYPE& aDispatchLoader, vk::ExportSemaphoreCreateInfo aExportSemaphoreCreateInfo, std::function<void(semaphore_t&)> aAlterConfigBeforeCreation);
 		static semaphore create_semaphore(vk::Device aDevice, const DISPATCH_LOADER_CORE_TYPE& aDispatchLoader, std::function<void(semaphore_t&)> aAlterConfigBeforeCreation = {});
 		semaphore create_semaphore(std::function<void(semaphore_t&)> aAlterConfigBeforeCreation = {});
+		semaphore create_exportable_semaphore(vk::ExportSemaphoreCreateInfo aExportSemaphoreCreateInfo, std::function<void(semaphore_t&)> aAlterConfigBeforeCreation = {});
 #pragma endregion
 
 #pragma region shader

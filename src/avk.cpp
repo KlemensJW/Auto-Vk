@@ -7311,6 +7311,23 @@ namespace avk
 		//   See: https://isocpp.org/wiki/faq/dtors#calling-member-dtors
 	}
 
+	semaphore root::create_exportable_semaphore(vk::Device aDevice, const DISPATCH_LOADER_CORE_TYPE& aDispatchLoader, vk::ExportSemaphoreCreateInfo aExportSemaphoreCreateInfo ,std::function<void(semaphore_t&)> aAlterConfigBeforeCreation)
+	{
+		semaphore_t result;
+
+		vk::SemaphoreCreateInfo create_info = vk::SemaphoreCreateInfo().setPNext(&aExportSemaphoreCreateInfo);
+
+		result.mCreateInfo = create_info;
+
+		// Maybe alter the config?
+		if (aAlterConfigBeforeCreation) {
+			aAlterConfigBeforeCreation(result);
+		}
+
+		result.mSemaphore = aDevice.createSemaphoreUnique(result.mCreateInfo, nullptr, aDispatchLoader);
+		return result;
+	}
+
 	semaphore root::create_semaphore(vk::Device aDevice, const DISPATCH_LOADER_CORE_TYPE& aDispatchLoader, std::function<void(semaphore_t&)> aAlterConfigBeforeCreation)
 	{
 		semaphore_t result;
@@ -7328,6 +7345,11 @@ namespace avk
 	semaphore root::create_semaphore(std::function<void(semaphore_t&)> aAlterConfigBeforeCreation)
 	{
 		return create_semaphore(device(), dispatch_loader_core(), std::move(aAlterConfigBeforeCreation));
+	}
+
+	semaphore root::create_exportable_semaphore(vk::ExportSemaphoreCreateInfo aExportSemaphoreCreateInfo, std::function<void(semaphore_t&)> aAlterConfigBeforeCreation)
+	{
+		return create_exportable_semaphore(device(), dispatch_loader_core(), aExportSemaphoreCreateInfo, std::move(aAlterConfigBeforeCreation));
 	}
 
 	semaphore_t& semaphore_t::handle_lifetime_of(any_owning_resource_t aResource)
