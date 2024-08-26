@@ -5177,7 +5177,7 @@ namespace avk
 			aAlterConfigBeforeCreation(result);
 		}
 
-		result.mImage = AVK_MEM_IMAGE_HANDLE{ memory_allocator(), memoryPropFlags, result.mCreateInfo};
+		result.mImage = AVK_MEM_IMAGE_HANDLE{ memory_allocator(), memoryPropFlags, result.mCreateInfo };
 
 		return result;
 	}
@@ -7315,9 +7315,11 @@ namespace avk
 	{
 		semaphore_t result;
 
-		vk::SemaphoreCreateInfo create_info = vk::SemaphoreCreateInfo().setPNext(&aExportSemaphoreCreateInfo);
+		vk::SemaphoreCreateInfo create_info = vk::SemaphoreCreateInfo();
 
 		result.mCreateInfo = create_info;
+
+		result.mCreateInfo.pNext = &aExportSemaphoreCreateInfo;
 
 		// Maybe alter the config?
 		if (aAlterConfigBeforeCreation) {

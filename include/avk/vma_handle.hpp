@@ -98,11 +98,13 @@ namespace avk
 			return vk::MemoryPropertyFlags{ result };
 		}
 
+		/** Get the vkDeviceMemory and the offset of the image. */
 		std::tuple<vk::DeviceMemory, vk::DeviceSize> device_memory_and_offset() const
 		{
 			return {mAllocationInfo.deviceMemory, mAllocationInfo.offset};
 		}
 
+		/** Get the size of the image in memory. */
 		vk::DeviceSize memory_size() const
 		{
 			return mAllocationInfo.size;
@@ -274,25 +276,6 @@ namespace avk
 			mAllocationInfo = {};
 			mResource = nullptr;
 		}
-	}
-
-	inline VmaPool alloc_custom_pool(VmaAllocator aAllocator, const VmaPoolCreateInfo* aPoolCreateInfo)
-	{
-		/*
-		VmaPoolCreateInfo pool_create_info = {};
-		pool_create_info.memoryTypeIndex = ;
-		pool_create_info.flags = ;
-		pool_create_info.blockSize = 0; // default
-		pool_create_info.minBlockCount = 0; // default
-		pool_create_info.maxBlockCount = 0;	// default
-		pool_create_info.priority = 0; // ignored unless VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT was used during creation of the VmaAllocator object
-		pool_create_info.minAllocationAlignment = 0; // default, though it is mentioned that i might need different alignment for interop with OpenGL so maybe also for interop with CUDA
-		pool_create_info.pMemoryAllocateNext = aAllocate_info;
-		*/
-
-		VmaPool pool;
-		vmaCreatePool(aAllocator, aPoolCreateInfo, &pool);
-		return pool;
 	}
 
 }
