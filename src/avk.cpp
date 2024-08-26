@@ -7316,10 +7316,10 @@ namespace avk
 		semaphore_t result;
 
 		vk::SemaphoreCreateInfo create_info = vk::SemaphoreCreateInfo();
-
+		create_info.setPNext(&aExportSemaphoreCreateInfo);
 		result.mCreateInfo = create_info;
 
-		result.mCreateInfo.pNext = &aExportSemaphoreCreateInfo;
+		//result.mCreateInfo.pNext = &aExportSemaphoreCreateInfo;
 
 		// Maybe alter the config?
 		if (aAlterConfigBeforeCreation) {

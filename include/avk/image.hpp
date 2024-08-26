@@ -65,6 +65,7 @@ namespace avk
 		
 		[[nodiscard]] const auto* root_ptr() const { return mRoot; }
 
+		/** Gets the DeviceMemory and the offset into it, IF this instance represents an allocated image, not a wrapped one. */
 		std::tuple<vk::DeviceMemory, vk::DeviceSize> device_memory_and_offset() const
 		{
 			assert(!std::holds_alternative<std::monostate>(mImage));
@@ -74,6 +75,7 @@ namespace avk
 			return std::get<AVK_MEM_IMAGE_HANDLE>(mImage).device_memory_and_offset();
 		}
 
+		/** Gets the size of the image in memory, IF this instance represents an allocated image, not a wrapped one. */
 		vk::DeviceSize memory_size() const
 		{
 			assert(!std::holds_alternative<std::monostate>(mImage));

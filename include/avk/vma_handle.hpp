@@ -98,13 +98,13 @@ namespace avk
 			return vk::MemoryPropertyFlags{ result };
 		}
 
-		/** Get the vkDeviceMemory and the offset of the image. */
+		/** Get the vkDeviceMemory and the offset of the allocated resource. */
 		std::tuple<vk::DeviceMemory, vk::DeviceSize> device_memory_and_offset() const
 		{
 			return {mAllocationInfo.deviceMemory, mAllocationInfo.offset};
 		}
 
-		/** Get the size of the image in memory. */
+		/** Get the size of the allocated resource in memory. */
 		vk::DeviceSize memory_size() const
 		{
 			return mAllocationInfo.size;
@@ -170,9 +170,10 @@ namespace avk
 		throw avk::runtime_error(std::string("VMA allocation not implemented for type ") + typeid(T).name());
 	}
 
+	// Fail if not used with either vk::Buffer or vk::Image
 	template<typename T>
 	template<typename C>
-	inline vma_handle<T>::vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const C& aResourceCreateInfo, VmaPool aPool)
+	vma_handle<T>::vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const C& aResourceCreateInfo, VmaPool aPool)
 	{
 		throw avk::runtime_error(std::string("VMA allocation not implemented for type ") + typeid(T).name());
 	}
@@ -193,7 +194,7 @@ namespace avk
 		mResource = buffer;
 	}
 
-	// Constructor's template specialization for vk::Buffer
+	// overloaded Constructor's template specialization for vk::Buffer
 	template <>
 	template <>
 	inline vma_handle<vk::Buffer>::vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const vk::BufferCreateInfo& aResourceCreateInfo, VmaPool aPool)
@@ -226,7 +227,7 @@ namespace avk
 		mResource = image;
 	}
 
-	// Constructor's template specialization for vk::Image
+	// overloaded Constructor's template specialization for vk::Image
 	template <>
 	template <>
 	inline vma_handle<vk::Image>::vma_handle(VmaAllocator aAllocator, vk::MemoryPropertyFlags aMemPropFlags, const vk::ImageCreateInfo& aResourceCreateInfo, VmaPool aPool)

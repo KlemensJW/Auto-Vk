@@ -74,13 +74,13 @@ namespace avk
 			return mMemoryPropertyFlags;
 		}
 
-		/** Get the vkDeviceMemory and the offset of the image. */
+		/** Get the vkDeviceMemory and the offset of the allocated resource. */
 		std::tuple<vk::DeviceMemory, vk::DeviceSize> device_memory_and_offset() const
 		{
 			return { mMemory, 0};
 		}
 
-		/** Get the size of the image in memory. */
+		/** Get the size of the allocated resource in memory. */
 		vk::DeviceSize memory_size() const
 		{
 			return mSize;
