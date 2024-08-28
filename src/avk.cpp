@@ -7319,8 +7319,6 @@ namespace avk
 		create_info.setPNext(&aExportSemaphoreCreateInfo);
 		result.mCreateInfo = create_info;
 
-		//result.mCreateInfo.pNext = &aExportSemaphoreCreateInfo;
-
 		// Maybe alter the config?
 		if (aAlterConfigBeforeCreation) {
 			aAlterConfigBeforeCreation(result);
