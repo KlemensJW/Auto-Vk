@@ -479,6 +479,23 @@ namespace avk
 			return *this;
 		}
 
+		// Reset the owning_resource, optionally providing a new resource
+		void reset(T* newResource = nullptr, bool enableSharedOwnership = false)
+		{
+			// First, clear the current resource by setting it to std::monostate
+			*this_as_variant() = std::monostate{};
+
+			// If a new resource is provided, take ownership of it
+			if (newResource != nullptr) {
+				if (enableSharedOwnership) {
+					*this_as_variant() = std::make_shared<T>(std::move(*newResource));
+				}
+				else {
+					*this_as_variant() = std::move(*newResource);
+				}
+			}
+		}
+
 		// Nothing wrong with default destruction
 		~owning_resource() = default;
 
