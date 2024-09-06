@@ -5082,7 +5082,6 @@ namespace avk
 
 		result.mImageUsage = aImageUsage;
 		result.mAspectFlags = aspectFlags;
-
 		// Maybe alter the config?!
 		if (aAlterConfigBeforeCreation) {
 			aAlterConfigBeforeCreation(result);
